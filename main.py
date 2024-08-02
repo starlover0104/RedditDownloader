@@ -71,7 +71,7 @@ def save_text(selftext, filename, download_folder):
 def get_available_flairs(subreddit):
     try:
         flairs = set()
-        for submission in subreddit.hot(limit=10000):
+        for submission in subreddit.hot(limit=100):
             if submission.link_flair_text:
                 flairs.add(submission.link_flair_text)
         return list(flairs)
@@ -89,12 +89,14 @@ def scrape_reddit(subreddit_name, count, num_threads, download_type, flair=None)
     reddit = get_reddit_instance()
     try:
         subreddit = reddit.subreddit(subreddit_name)
-        posts = [submission for submission in subreddit.hot(limit=count) if (not flair or submission.link_flair_text == flair)]
+        posts = list(subreddit.hot(limit=count))
+        posts = [submission for submission in posts if (not flair or submission.link_flair_text == flair)]
     except RedditAPIException as e:
         print(f"Error accessing subreddit {subreddit_name}: {str(e)}")
         return
 
     total_downloads = 0
+    total_processed = 0
     batch_size = 100
     for i in range(0, len(posts), batch_size):
         batch = posts[i:i+batch_size]
@@ -122,13 +124,17 @@ def scrape_reddit(subreddit_name, count, num_threads, download_type, flair=None)
                     print(f"Error in future task: {str(e)}")
 
         total_downloads += batch_downloads
-        print(f"\nCompleted {batch_downloads} downloads in this batch. Total downloads: {total_downloads}")
+        total_processed += len(batch)
+        print(f"\nProcessed {len(batch)} posts in this batch.")
+        print(f"Completed {batch_downloads} downloads in this batch. Total downloads: {total_downloads}")
+        print(f"Total posts processed: {total_processed}")
         
-        if i + batch_size < len(posts):
+        if total_processed < count and total_processed % batch_size == 0:
             print(f"Starting cooldown...")
             countdown_timer(60)
 
-    print(f"\nAll downloads completed. Total successful downloads: {total_downloads}")
+    print(f"\nAll posts processed. Total posts: {total_processed}")
+    print(f"Total successful downloads: {total_downloads}")
 
 def print_title():
     title = r"""
