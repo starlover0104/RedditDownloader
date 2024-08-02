@@ -12,3 +12,5 @@ Prequisities
 4. Type `pip install -r requirements.txt`
 5. Run the python file by typing `python main.py` or  `py main.py`
 
+Note: at the moment this only downloads the first 100 of a subreddit because of APP limiting but im working on a workaround.
+
