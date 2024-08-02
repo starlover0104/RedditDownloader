@@ -7,10 +7,10 @@ from praw.exceptions import RedditAPIException, ClientException, PRAWException
 
 def read_api_credentials():
     try:
-        with open('API.txt', 'r') as file:
+        with open('App.txt', 'r') as file:
             lines = file.readlines()
             if len(lines) < 3:
-                raise ValueError("API.txt should contain at least 3 lines")
+                raise ValueError("App.txt should contain at least 3 lines")
             return {
                 'client_id': lines[0].strip(),
                 'client_secret': lines[1].strip(),
