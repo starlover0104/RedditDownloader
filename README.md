@@ -6,8 +6,9 @@ Prequisities
 - Praw and requests modules
 
 # How to use
-1. Open CMD
-2. Point to the dir of the script
-3. Type `pip install -r requirements.txt`
-4. Run the python file by typing `python main.py` or  `py main.py`
+1. Input the correct values in API.txt
+2. Open CMD
+3. Point to the dir of the script
+4. Type `pip install -r requirements.txt`
+5. Run the python file by typing `python main.py` or  `py main.py`
 
