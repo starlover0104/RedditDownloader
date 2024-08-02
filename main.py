@@ -1,6 +1,7 @@
 import praw
 import requests
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from praw.exceptions import RedditAPIException, ClientException, PRAWException
 
@@ -51,8 +52,10 @@ def download_file(url, filename, download_folder):
             for chunk in response.iter_content(chunk_size=8192):
                 file.write(chunk)
         print(f"Downloaded {filename} to {file_path}")
+        return True
     except requests.RequestException as e:
         print(f"Error downloading file {filename}: {str(e)}")
+        return False
 
 def save_text(selftext, filename, download_folder):
     try:
@@ -60,13 +63,15 @@ def save_text(selftext, filename, download_folder):
         with open(file_path, 'w', encoding='utf-8') as file:
             file.write(selftext)
         print(f"Saved text post to {file_path}")
+        return True
     except IOError as e:
         print(f"Error saving text file {filename}: {str(e)}")
+        return False
 
 def get_available_flairs(subreddit):
     try:
         flairs = set()
-        for submission in subreddit.hot(limit=100):
+        for submission in subreddit.hot(limit=10000):
             if submission.link_flair_text:
                 flairs.add(submission.link_flair_text)
         return list(flairs)
@@ -74,34 +79,56 @@ def get_available_flairs(subreddit):
         print(f"Error fetching flairs: {str(e)}")
         return []
 
+def countdown_timer(seconds):
+    for remaining in range(seconds, 0, -1):
+        print(f"\rCooldown: {remaining} seconds remaining", end='', flush=True)
+        time.sleep(1)
+    print("\rCooldown complete. Resuming downloads...                ")
+
 def scrape_reddit(subreddit_name, count, num_threads, download_type, flair=None):
     reddit = get_reddit_instance()
     try:
         subreddit = reddit.subreddit(subreddit_name)
-        posts = [submission for submission in subreddit.hot(limit=100) if (not flair or submission.link_flair_text == flair)]
-        posts = posts[:count]
+        posts = [submission for submission in subreddit.hot(limit=count) if (not flair or submission.link_flair_text == flair)]
     except RedditAPIException as e:
         print(f"Error accessing subreddit {subreddit_name}: {str(e)}")
         return
 
-    with ThreadPoolExecutor(max_workers=num_threads) as executor:
-        futures = []
-        for submission in posts:
-            if download_type in ['media', 'both'] and hasattr(submission, 'url') and submission.url.endswith(('.jpg', '.jpeg', '.png', '.gif', '.mp4')):
-                media_name = os.path.basename(submission.url)
-                media_folder = get_downloads_folder('Media')
-                futures.append(executor.submit(download_file, submission.url, media_name, media_folder))
-            
-            if download_type in ['text', 'both'] and submission.selftext:
-                text_filename = f"{submission.id}_text.txt"
-                text_folder = get_downloads_folder('Text')
-                futures.append(executor.submit(save_text, submission.selftext, text_filename, text_folder))
+    total_downloads = 0
+    batch_size = 100
+    for i in range(0, len(posts), batch_size):
+        batch = posts[i:i+batch_size]
+        batch_downloads = 0
+        
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            futures = []
+            for submission in batch:
+                if download_type in ['media', 'both'] and hasattr(submission, 'url') and submission.url.endswith(('.jpg', '.jpeg', '.png', '.gif', '.mp4')):
+                    media_name = os.path.basename(submission.url)
+                    media_folder = get_downloads_folder('Media')
+                    futures.append(executor.submit(download_file, submission.url, media_name, media_folder))
+                
+                if download_type in ['text', 'both'] and submission.selftext:
+                    text_filename = f"{submission.id}_text.txt"
+                    text_folder = get_downloads_folder('Text')
+                    futures.append(executor.submit(save_text, submission.selftext, text_filename, text_folder))
 
-        for future in as_completed(futures):
-            try:
-                future.result()
-            except Exception as e:
-                print(f"Error in future task: {str(e)}")
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    if result:
+                        batch_downloads += 1
+                except Exception as e:
+                    print(f"Error in future task: {str(e)}")
+
+        total_downloads += batch_downloads
+        print(f"\nCompleted {batch_downloads} downloads in this batch. Total downloads: {total_downloads}")
+        
+        if i + batch_size < len(posts):
+            print(f"Starting cooldown...")
+            countdown_timer(60)
+
+    print(f"\nAll downloads completed. Total successful downloads: {total_downloads}")
 
 def print_title():
     title = r"""
