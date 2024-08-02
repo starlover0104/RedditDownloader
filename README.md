@@ -1,7 +1,7 @@
 # Reddit Downloader
 
 Prequisities 
-- Requires Python 3.6.x+
+- Requires Python 3.6.x+ (Recommended 3.8.x+)
 - Reddit APP
 - Praw and requests modules
 
