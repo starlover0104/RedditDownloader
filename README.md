@@ -20,7 +20,7 @@ Prequisities
 5. Choose a name and make the redirect url `https://reddit.com`
 - Your client id is the values under "personal use script"
 - Your client secret is the values after "Secret"
-- 
+- Your user agent will just be "Script for [Your User"
 
 Note: I have capped it at 10,000 downloads in one go with cooldowns to support the rules of Reddit. You can contact me via starlover0104 on discord to get a custom made version with the cap higher **if** you really need it.
 
