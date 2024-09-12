@@ -23,7 +23,7 @@ Prequisities
 - Your user agent will just be "Script for [Your User}"
 
 # Inquiries
-- Contact me via `starlover@starlover.online` for any issues
+- Contact me via email at `starlover@starlover.online` for any issues
 
 
 
