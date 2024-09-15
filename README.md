@@ -25,5 +25,7 @@ Prequisities
 # Inquiries
 - Contact me via email at `starlover@starlover.online` for any issues
 
+# Note
+- It is capped at 100 downloads per minute to comply with reddit API rules.
 
 
